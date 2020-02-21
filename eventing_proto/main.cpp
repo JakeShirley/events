@@ -34,12 +34,14 @@ public:
 		std::cout << "ExampleListener1 - int - " << event << std::endl;
 	}
 
-	void handleFloat(const float& event) {
+	void handle(const float& event) {
 		std::cout << "ExampleListener1 - float - " << event << std::endl;
 	}
 };
 
 int main() {
+
+	
 	auto pub = std::make_shared<Dispatcher>();
 
 	SubscriberBuilder<Dispatcher> builder(pub);
@@ -47,19 +49,26 @@ int main() {
 	{
 		auto listener1 = std::make_shared<ExampleListener1>();
 
-		auto handle = builder.subscribe(listener1).with<float>(&ExampleListener1::handleFloat).build();
+		auto handle = builder.subscribe(listener1)
+			.with<EventA, &ExampleListener1::handle>()
+			.with<EventB, &ExampleListener1::handle>()
+			.with<EventC, &ExampleListener1::handle>()
+			.with<int, &ExampleListener1::handle>()
+			.with<float, &ExampleListener1::handle>()
+			.build();
 
-		//pub->add<ExampleListener1, EventA, &ExampleListener1::handle>(listener1);
-		//pub->add<ExampleListener1, EventB, &ExampleListener1::handle>(listener1);
-		//pub->add<ExampleListener1, int, &ExampleListener1::handle>(listener1);
-		//
-		//pub->publish(EventA());
+
+		pub->publish(EventA());
 		pub->publish(6.f);
-		//pub->publish(EventB());
-		//pub->publish(EventC());
+		handle.remove<float, &ExampleListener1::handle>();
+		pub->publish(6.f);
+		pub->publish(EventB());
+		pub->publish(EventC());
 	}
 
-	//pub->publish(6);
-	//pub->publish(EventB());
-	//pub->publish(EventC());
+	pub->publish(EventA());
+	pub->publish(6);
+	pub->publish(EventB());
+	pub->publish(EventC());
+	
 }

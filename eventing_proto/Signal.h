@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cassert>
 #include <memory>
 #include <vector>
 
@@ -11,6 +12,8 @@ public:
 	virtual ~BaseSignal() = default;
 };
 
+// This class stores calls to subscribers
+// for a specific EventT
 template<typename EventT>
 class Signal : public BaseSignal {
 	using InstanceType = std::weak_ptr<void>;
@@ -21,6 +24,11 @@ class Signal : public BaseSignal {
 		bool result = false;
 
 		std::shared_ptr<SubscriberT> ptr = std::static_pointer_cast<SubscriberT>(wptr.lock());
+		
+		// TODO Replace with regular assert
+		// Subscribers should always be explicitly unsubscribed
+		assert(ptr);
+
 		if (ptr) {
 			(ptr.get()->*Fn)(event);
 			result = true;
@@ -46,24 +54,20 @@ class Signal : public BaseSignal {
 	};
 
 public:
-	
-	// TODO: Add overloads for weak ptrs?
 
-	template<class SubscriberT, void(SubscriberT::*MethodT)(const EventT &), MethodT Fn>
-	void add(SubscriberHandleWeak<SubType> handle) {
-		// TODO Handle lambdas
-
+	template<class SubscriberT, void(SubscriberT::*MethodT)(const EventT &)>
+	void add(SubscriberHandleWeak<SubscriberT> handle) {
 		// Remove incase we already exist
-		remove<SubscriberT, MethodT, Fn>(handle);
+		remove<SubscriberT, MethodT>(handle);
 
 		// Insert
-		Call call(std::move(handle.handle), &stub<SubscriberT, MethodT, Fn>);
+		Call call(std::move(handle.handle), &stub<SubscriberT, decltype(MethodT), MethodT>);
 		mCalls.emplace_back(std::move(call));
 	}
 	
-	template<class SubscriberT, void(SubscriberT::*MethodT)(const EventT &), MethodT Fn>
+	template<class SubscriberT, void(SubscriberT::*MethodT)(const EventT &)>
 	void remove(SubscriberHandleWeak<SubscriberT> handle) {
-		Call call(std::move(handle.handle), &stub<SubscriberT, MethodT, Fn>);
+		Call call(std::move(handle.handle), &stub<SubscriberT, decltype(MethodT), MethodT>);
 		mCalls.erase(std::remove(mCalls.begin(), mCalls.end(), call), mCalls.end());
 	}
 
@@ -80,7 +84,7 @@ public:
 		}
 	}
 
-	std::size_t size() const noexcept {
+	std::size_t size() const {
 		return mCalls.size();
 	}
 

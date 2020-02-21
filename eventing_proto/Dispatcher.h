@@ -13,12 +13,25 @@ public:
 	using SignalTypeId = uint32_t;
 
 	template
-	<typename SubscriberHandleWeakT, typename EventT, typename MethodT>
-	void add(SubscriberHandleWeakT handle, MethodT fn) {
+	<typename SubscriberT, typename EventT, void(SubscriberT::*MethodT)(const EventT &)>
+	void add(SubscriberHandleWeak<SubscriberT> handle) {
 		auto signalPtr = _getOrCreateSignal<EventT>();
 
 		if (signalPtr) {
-			return signalPtr->add<SubscriberHandleWeakT, MethodT>(std::move(handle), fn);
+			return signalPtr->add<SubscriberT, MethodT>(std::move(handle));
+		}
+		else {
+			// TODO: Fail here
+		}
+	}
+
+	template
+	<typename SubscriberT, typename EventT, void(SubscriberT::*MethodT)(const EventT &)>
+	void remove(SubscriberHandleWeak<SubscriberT> handle) {
+		auto signalPtr = _getOrCreateSignal<EventT>();
+
+		if (signalPtr) {
+			return signalPtr->remove<SubscriberT, MethodT>(std::move(handle));
 		}
 		else {
 			// TODO: Fail here

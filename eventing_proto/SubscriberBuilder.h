@@ -5,21 +5,20 @@
 
 // TODO
 template 
-<typename ListenerT, typename DispatcherT>
+<typename SubscriberT, typename DispatcherT>
 class SubscriptionBuilderHandle {
 public:
-	using SubHandleT = SubscriberHandle<ListenerT, DispatcherT>;
+	using SubHandleT = SubscriberHandle<SubscriberT, DispatcherT>;
 
-	SubscriptionBuilderHandle(std::shared_ptr<ListenerT> listener, std::weak_ptr<DispatcherT> dispatcher)
+	SubscriptionBuilderHandle(std::shared_ptr<SubscriberT> listener, std::weak_ptr<DispatcherT> dispatcher)
 		: mHandle(listener.get(), std::move(dispatcher))
 	{
 	}
 
-	template <typename EventT, typename MethodFn>
-	SubscriptionBuilderHandle& with(MethodFn fn) {
+	template <typename EventT, void(SubscriberT::*MethodT)(const EventT &)>
+	SubscriptionBuilderHandle& with() {
 		// TODO: Debug assert for listener/dispatcher to catch if we're building more after we finish
-		// TODO: Register
-		mHandle.add<EventT, MethodFn>(fn);
+		mHandle.add<EventT, MethodT>();
 
 		return *this;
 	}
@@ -38,8 +37,8 @@ template
 class SubscriberBuilder {
 
 	template
-	<typename ListenerT>
-	SubscriberHandle<ListenerT, DispatcherT> subscribe(std::shared_ptr<ListenerT> listener);
+	<typename SubscriberT>
+	SubscriberHandle<SubscriberT, DispatcherT> subscribe(std::shared_ptr<SubscriberT> listener);
 
 };
 
@@ -54,9 +53,9 @@ public:
 	}
 
 	template
-	<typename ListenerT>
-		SubscriptionBuilderHandle<ListenerT, Dispatcher> subscribe(std::shared_ptr<ListenerT> listener) {
-		return SubscriptionBuilderHandle<ListenerT, Dispatcher>(listener, mDispatcher);
+	<typename SubscriberT>
+	SubscriptionBuilderHandle<SubscriberT, Dispatcher> subscribe(std::shared_ptr<SubscriberT> listener) {
+		return SubscriptionBuilderHandle<SubscriberT, Dispatcher>(listener, mDispatcher);
 	}
 
 
