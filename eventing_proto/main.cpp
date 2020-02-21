@@ -2,6 +2,7 @@
 #include <string>
 
 #include "Dispatcher.h"
+#include "SubscriberBuilder.h"
 
 struct EventA {
 	int foo = 1;
@@ -32,25 +33,33 @@ public:
 	void handle(const int& event) {
 		std::cout << "ExampleListener1 - int - " << event << std::endl;
 	}
+
+	void handleFloat(const float& event) {
+		std::cout << "ExampleListener1 - float - " << event << std::endl;
+	}
 };
 
 int main() {
-	Dispatcher pub;
+	auto pub = std::make_shared<Dispatcher>();
+
+	SubscriberBuilder<Dispatcher> builder(pub);
 
 	{
 		auto listener1 = std::make_shared<ExampleListener1>();
 
-		pub.add<ExampleListener1, EventA, &ExampleListener1::handle>(listener1);
-		pub.add<ExampleListener1, EventB, &ExampleListener1::handle>(listener1);
-		pub.add<ExampleListener1, int, &ExampleListener1::handle>(listener1);
+		auto handle = builder.subscribe(listener1).with<float>(&ExampleListener1::handleFloat).build();
 
-		pub.publish(EventA());
-		pub.publish(6);
-		pub.publish(EventB());
-		pub.publish(EventC());
+		//pub->add<ExampleListener1, EventA, &ExampleListener1::handle>(listener1);
+		//pub->add<ExampleListener1, EventB, &ExampleListener1::handle>(listener1);
+		//pub->add<ExampleListener1, int, &ExampleListener1::handle>(listener1);
+		//
+		//pub->publish(EventA());
+		pub->publish(6.f);
+		//pub->publish(EventB());
+		//pub->publish(EventC());
 	}
 
-	pub.publish(6);
-	pub.publish(EventB());
-	pub.publish(EventC());
+	//pub->publish(6);
+	//pub->publish(EventB());
+	//pub->publish(EventC());
 }

@@ -4,6 +4,8 @@
 #include <memory>
 #include <vector>
 
+#include "Subscriber.h"
+
 class BaseSignal {
 public:
 	virtual ~BaseSignal() = default;
@@ -12,13 +14,13 @@ public:
 template<typename EventT>
 class Signal : public BaseSignal {
 	using InstanceType = std::weak_ptr<void>;
-	using CallType = bool(*)(std::weak_ptr<void> &, const EventT &);
+	using CallType = bool(*)(std::weak_ptr<void>& wptr, const EventT& event);
 
-	template<class ListenerT, void(ListenerT::*Fn)(const EventT &) = &ListenerT::receive>
-	static bool stub(std::weak_ptr<void> &wptr, const EventT& event) {
+	template<class SubscriberT, typename MethodT, MethodT Fn>
+	static bool stub(std::weak_ptr<void>& wptr, const EventT& event) {
 		bool result = false;
 
-		std::shared_ptr<ListenerT> ptr = std::static_pointer_cast<ListenerT>(wptr.lock());
+		std::shared_ptr<SubscriberT> ptr = std::static_pointer_cast<SubscriberT>(wptr.lock());
 		if (ptr) {
 			(ptr.get()->*Fn)(event);
 			result = true;
@@ -44,27 +46,25 @@ class Signal : public BaseSignal {
 	};
 
 public:
+	
+	// TODO: Add overloads for weak ptrs?
 
-	template<class ListenerT, void(ListenerT::*Fn)(const EventT&)>
-	void add(std::weak_ptr<ListenerT> ptr) {
-		remove<ListenerT, Fn>(ptr);
-		mCalls.emplace_back(std::move(ptr), &stub<ListenerT, Fn>);
+	template<class SubscriberT, void(SubscriberT::*MethodT)(const EventT &), MethodT Fn>
+	void add(SubscriberHandleWeak<SubType> handle) {
+		// TODO Handle lambdas
+
+		// Remove incase we already exist
+		remove<SubscriberT, MethodT, Fn>(handle);
+
+		// Insert
+		Call call(std::move(handle.handle), &stub<SubscriberT, MethodT, Fn>);
+		mCalls.emplace_back(std::move(call));
 	}
-
-	template<class ListenerT, void(ListenerT::*Fn)(const EventT&)>
-	void add(std::shared_ptr<ListenerT> ptr) {
-		add<ListenerT, Fn>(std::weak_ptr<ListenerT>(ptr));
-	}
-
-	template<class ListenerT, void(ListenerT::*Fn)(const EventT&)>
-	void remove(std::weak_ptr<ListenerT> ptr) {
-		Call call(std::move(ptr), &stub<ListenerT, Fn>);
+	
+	template<class SubscriberT, void(SubscriberT::*MethodT)(const EventT &), MethodT Fn>
+	void remove(SubscriberHandleWeak<SubscriberT> handle) {
+		Call call(std::move(handle.handle), &stub<SubscriberT, MethodT, Fn>);
 		mCalls.erase(std::remove(mCalls.begin(), mCalls.end(), call), mCalls.end());
-	}
-
-	template<class ListenerT, void(ListenerT::*Fn)(const EventT&)>
-	void remove(std::shared_ptr<ListenerT> ptr) {
-		remove(std::weak_ptr<ListenerT>(ptr));
 	}
 
 	void publish(const EventT& event) {

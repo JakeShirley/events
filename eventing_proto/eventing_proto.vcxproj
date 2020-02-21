@@ -129,6 +129,8 @@
   <ItemGroup>
     <ClInclude Include="Dispatcher.h" />
     <ClInclude Include="IEventDisapatcher.h" />
+    <ClInclude Include="SubscriberBuilder.h" />
+    <ClInclude Include="Subscriber.h" />
     <ClInclude Include="TypeId.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -4,6 +4,7 @@
 #include <memory>
 #include <unordered_map>
 
+#include "Subscriber.h"
 #include "Signal.h"
 #include "TypeId.h"
 
@@ -12,12 +13,12 @@ public:
 	using SignalTypeId = uint32_t;
 
 	template
-	<typename ListenerT, typename EventT, void(ListenerT::*Fn)(const EventT&)>
-	void add(std::shared_ptr<ListenerT> listener) {
+	<typename SubscriberHandleWeakT, typename EventT, typename MethodT>
+	void add(SubscriberHandleWeakT handle, MethodT fn) {
 		auto signalPtr = _getOrCreateSignal<EventT>();
 
 		if (signalPtr) {
-			return signalPtr->add<ListenerT, Fn>(listener);
+			return signalPtr->add<SubscriberHandleWeakT, MethodT>(std::move(handle), fn);
 		}
 		else {
 			// TODO: Fail here
