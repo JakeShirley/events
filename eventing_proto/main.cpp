@@ -1,74 +1,57 @@
 #include <iostream>
 #include <string>
 
-#include "Dispatcher.h"
-#include "SubscriberBuilder.h"
+#include "MinecraftEventBus.h"
+#include "Subscription.h"
 
-struct EventA {
-	int foo = 1;
+struct EventA : public IEvent {
+	EventA(int i) : foo(i) {}
+	int foo = 0;
 };
 
-struct EventB {
-	int bar = 2;
+struct EventB : public IEvent {
+	EventB(float i) : bar(i) {}
+	float bar = 0;
 };
 
-struct EventC {
-	std::string name;
-};
-
-class ExampleListener1 {
+class ExampleListener {
 public:
+	ExampleListener(IEventBus& eventBus, const std::string& listenerName)
+		: mSubscription(this, eventBus) 
+		, mListenerName(listenerName)
+	{
+
+		mSubscription
+			.subscribe<EventA>() // Defaults to &ExampleListener1::handle
+			.subscribe<EventB, &ExampleListener::handle_different>();
+	}
+
 	void handle(const EventA& event) {
-		std::cout << "ExampleListener1 - A - " << event.foo << std::endl;
+		std::cout << mListenerName << " - A - " << event.foo << std::endl;
 	}
 
-	void handle(const EventB& event) {
-		std::cout << "ExampleListener1 - B - " << event.bar << std::endl;
+	void handle_different(const EventB& event) {
+		std::cout << mListenerName << " - B - " << event.bar << std::endl;
 	}
 
-	void handle(const EventC& event) {
-		std::cout << "ExampleListener1 - C - " << event.name << std::endl;
-	}
-
-	void handle(const int& event) {
-		std::cout << "ExampleListener1 - int - " << event << std::endl;
-	}
-
-	void handle(const float& event) {
-		std::cout << "ExampleListener1 - float - " << event << std::endl;
-	}
+private:
+	const std::string mListenerName;
+	Subscription<ExampleListener> mSubscription;
 };
 
 int main() {
-
-	
-	auto pub = std::make_shared<Dispatcher>();
-
-	SubscriberBuilder<Dispatcher> builder(pub);
+	std::unique_ptr<IEventBus> eventBus = std::make_unique<MinecraftEventBus>();
 
 	{
-		auto listener1 = std::make_shared<ExampleListener1>();
-
-		auto handle = builder.subscribe(listener1)
-			.with<EventA, &ExampleListener1::handle>()
-			.with<EventB, &ExampleListener1::handle>()
-			.with<EventC, &ExampleListener1::handle>()
-			.with<int, &ExampleListener1::handle>()
-			.with<float, &ExampleListener1::handle>()
-			.build();
-
-
-		pub->publish(EventA());
-		pub->publish(6.f);
-		handle.remove<float, &ExampleListener1::handle>();
-		pub->publish(6.f);
-		pub->publish(EventB());
-		pub->publish(EventC());
+		std::cout << "Testing 1" << std::endl;
+		ExampleListener listener1(*eventBus, "Listener 1");
+		eventBus->publish(EventA(3));
+		eventBus->publish(EventB(3.f));
 	}
 
-	pub->publish(EventA());
-	pub->publish(6);
-	pub->publish(EventB());
-	pub->publish(EventC());
-	
+	std::cout << "Testing 2" << std::endl;
+	ExampleListener listener2(*eventBus, "Listener 2");
+
+	eventBus->publish(EventA(4));
+	eventBus->publish(EventB(4.f));
 }

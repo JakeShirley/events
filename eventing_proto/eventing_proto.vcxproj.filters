@@ -18,24 +18,21 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Signal.h">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="MinecraftEventBus.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
     <ClInclude Include="TypeId.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="IEventDisapatcher.h">
+    <ClInclude Include="IEventBus.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Dispatcher.h">
+    <ClInclude Include="Subscription.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Subscriber.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SubscriberBuilder.h">
+    <ClInclude Include="IEvent.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
