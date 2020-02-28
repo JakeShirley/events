@@ -16,9 +16,6 @@ struct IEvent {
 template <typename T>
 class IEventBus;
 
-template <typename T, typename U>
-class Subscription;
-
 using IMinecraftEvent = IEvent;
 using MinecraftEventBus = IEventBus<IMinecraftEvent>;
 
