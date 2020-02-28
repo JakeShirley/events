@@ -14,10 +14,10 @@ template <typename T>
 class IEventBus {
 public:
 	using BaseEventT = T;
-	using SubscriberCallerT = ISubscriberCallerBase<BaseEventT>;
-	using PointerHolderBaseT = IPtrHolderBase;
+	using SubscriberCallerT = ISubscriberCaller<BaseEventT>;
+	using PointerHolderBaseT = IPointerHolder;
 	template <typename U>
-	using PointerHolderT = PtrHolder<U>;
+	using PointerHolderT = PointerHolder<U>;
 
 	virtual ~IEventBus() {}
 	
@@ -32,7 +32,7 @@ public:
 
 	// these could be base types
 	template<typename ClassType, typename EventType>
-	void subscribe(std::shared_ptr<PtrHolder<ClassType>> holder, std::shared_ptr<ClassSubscriberCaller<BaseEventT, ClassType, EventType>> subscriber) {
+	void subscribe(std::shared_ptr<PointerHolder<ClassType>> holder, std::shared_ptr<ClassSubscriberCaller<BaseEventT, ClassType, EventType>> subscriber) {
 		
 		std::shared_ptr<PointerHolderBaseT> holderBase = std::static_pointer_cast<PointerHolderBaseT>(holder);
 

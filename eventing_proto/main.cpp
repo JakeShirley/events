@@ -24,7 +24,7 @@ public:
 	{
 
 		mSubscription
-			.subscribe<EventA>()
+			.subscribe<EventA>() // Defaults to &ExampleListener::handle(const EventA&)
 			.subscribe<EventB, &ExampleListener::handle_different>();
 	}
 
@@ -46,7 +46,6 @@ public:
 	ExampleBroadcaster(const std::string& name)
 		: mPublisher(Eventing.make_publisher<EventA, EventB>())
 		, mName(name) {
-
 	}
 
 	void sendMessage(std::string msg) {
