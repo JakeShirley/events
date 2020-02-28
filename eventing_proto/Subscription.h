@@ -1,19 +1,22 @@
 #pragma once
 
+#include "PointerHolder.h"
+#include "SubscriberCaller.h"
+
 #include <memory>
+#include <vector>
 
-#include "IEventBus.h"
-
-template<typename SubscriberT>
+template<typename EventBusT, typename SubscriberT>
 class Subscription {
 public:
+	using SubscriberPointerHolder = typename EventBusT::template PointerHolderT<SubscriberT>;
+
 	Subscription(const Subscription&) = delete;
 	Subscription(Subscription&& rhs) = default;
 	Subscription& operator=(const Subscription&) = delete;
 
-
-	Subscription(SubscriberT* owner, IEventBus& bus)
-		: mHandle(std::make_shared<PtrHolder<SubscriberT>>(owner))
+	Subscription(SubscriberT* owner, EventBusT& bus)
+		: mHandle(std::make_shared<SubscriberPointerHolder>(owner))
 		, mEventBus(bus) {
 		// TODO: Assert if T is null
 	}
@@ -29,7 +32,7 @@ public:
 	<typename EventT, void (SubscriberT::*Method)(const EventT&) = &SubscriberT::handle>
 	Subscription& subscribe() {
 		
-		auto subscriber = std::make_shared<ClassSubscriberCaller<SubscriberT, EventT>>(Method);
+		auto subscriber = std::make_shared<ClassSubscriberCaller<EventBusT::BaseEventT, SubscriberT, EventT>>(Method);
 		mEventBus.subscribe(mHandle, subscriber);
 
 		// Note: These are not cleaned up at the moment,
@@ -61,7 +64,7 @@ private:
 	<typename EventT>
 	class Unsubscriber : public IUnsubscriber {
 	public:
-		Unsubscriber(IEventBus& bus, std::shared_ptr<IPtrHolderBase> handle)
+		Unsubscriber(EventBusT& bus, std::shared_ptr<typename EventBusT::PointerHolderBaseT> handle)
 			: mEventBus(bus)
 			, mHandle(std::move(handle))
 		{
@@ -72,11 +75,12 @@ private:
 		}
 
 	private:
-		IEventBus& mEventBus;
-		std::shared_ptr<IPtrHolderBase> mHandle;
+		EventBusT& mEventBus;
+		std::shared_ptr<typename EventBusT::PointerHolderBaseT> mHandle;
 	};
+
 	
 	std::vector<std::unique_ptr<IUnsubscriber>> mUnsubscribers;
-	std::shared_ptr<PtrHolder<SubscriberT>> mHandle;
-	IEventBus& mEventBus;
+	std::shared_ptr<SubscriberPointerHolder> mHandle;
+	EventBusT& mEventBus;
 };

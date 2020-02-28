@@ -18,11 +18,11 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MinecraftEventing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="MinecraftEventBus.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="TypeId.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -32,7 +32,19 @@
     <ClInclude Include="Subscription.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="IEvent.h">
+    <ClInclude Include="Publisher.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MinecraftEventing.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SimpleEventBus.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PointerHolder.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SubscriberCaller.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

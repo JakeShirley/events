@@ -1,29 +1,32 @@
 #include <iostream>
 #include <string>
 
-#include "MinecraftEventBus.h"
-#include "Subscription.h"
+#include "IEventBus.h"
+#include "MinecraftEventing.h"
+#include "Publisher.h"
 
-struct EventA : public IEvent {
+MinecraftEventing Eventing;
+
+struct EventA : public IMinecraftEvent {
 	EventA(int i) : foo(i) {}
 	int foo = 0;
 };
 
-struct EventB : public IEvent {
+struct EventB : public IMinecraftEvent {
 	EventB(float i) : bar(i) {}
 	float bar = 0;
 };
 
-class ExampleListener {
+class ExampleFoo {
 public:
-	ExampleListener(IEventBus& eventBus, const std::string& listenerName)
-		: mSubscription(this, eventBus) 
+	ExampleFoo(const std::string& listenerName)
+		: mSubscription(Eventing.make_subscription(this))
 		, mListenerName(listenerName)
 	{
 
 		mSubscription
-			.subscribe<EventA>() // Defaults to &ExampleListener1::handle
-			.subscribe<EventB, &ExampleListener::handle_different>();
+			.subscribe<EventA>()
+			.subscribe<EventB, &ExampleFoo::handle_different>();
 	}
 
 	void handle(const EventA& event) {
@@ -36,22 +39,22 @@ public:
 
 private:
 	const std::string mListenerName;
-	Subscription<ExampleListener> mSubscription;
+	MinecraftEventSubscription<ExampleFoo> mSubscription;
 };
 
 int main() {
-	std::unique_ptr<IEventBus> eventBus = std::make_unique<MinecraftEventBus>();
+	auto publisher = Eventing.make_publisher<EventA, EventB>();
 
 	{
 		std::cout << "Testing 1" << std::endl;
-		ExampleListener listener1(*eventBus, "Listener 1");
-		eventBus->publish(EventA(3));
-		eventBus->publish(EventB(3.f));
+		ExampleFoo listener1("Listener 1");
+		publisher.publish(EventA(3));
+		publisher.publish(EventB(3.f));
 	}
 
 	std::cout << "Testing 2" << std::endl;
-	ExampleListener listener2(*eventBus, "Listener 2");
+	ExampleFoo listener2("Listener 2");
 
-	eventBus->publish(EventA(4));
-	eventBus->publish(EventB(4.f));
+	publisher.publish(EventA(3));
+	publisher.publish(EventB(3.f));
 }

@@ -20,11 +20,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MinecraftEventing.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="IEvent.h" />
     <ClInclude Include="IEventBus.h" />
-    <ClInclude Include="MinecraftEventBus.h" />
+    <ClInclude Include="PointerHolder.h" />
+    <ClInclude Include="SimpleEventBus.h" />
+    <ClInclude Include="MinecraftEventing.h" />
+    <ClInclude Include="Publisher.h" />
+    <ClInclude Include="SubscriberCaller.h" />
     <ClInclude Include="Subscription.h" />
     <ClInclude Include="TypeId.h" />
   </ItemGroup>

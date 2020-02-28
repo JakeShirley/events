@@ -5,11 +5,18 @@
 #include <memory>
 #include <unordered_map>
 
-class MinecraftEventBus : public IEventBus {
+template <typename T>
+class SimpleEventBus : public IEventBus<T> {
 public:
-	virtual ~MinecraftEventBus() {}
+	using BaseEventT = typename IEventBus<T>::BaseEventT;
+	using PointerHolderBaseT = typename IEventBus<T>::PointerHolderBaseT;
+	using SubscriberCallerT = typename IEventBus<T>::SubscriberCallerT;
+	template <typename U>
+	using PointerHolderT = typename IEventBus<T>::template PointerHolderT<U>;
 
-	virtual void publish(EventId id, const IEvent& eventBase) override {
+	virtual ~SimpleEventBus() {}
+
+	virtual void publish(EventId id, const BaseEventT& eventBase) override {
 		auto eventItr = mEventMap.find(id);
 		if (eventItr != mEventMap.end()) {
 			auto& eventSubscribers = eventItr->second;
@@ -28,7 +35,7 @@ public:
 		}
 	}
 
-	virtual void subscribe(EventId id, std::shared_ptr<IPtrHolderBase> holder, std::shared_ptr<ISubscriberCallerBase> subcriber) override {
+	virtual void subscribe(EventId id, std::shared_ptr<PointerHolderBaseT> holder, std::shared_ptr<SubscriberCallerT> subcriber) override {
 		auto eventItr = mEventMap.find(id);
 		if (eventItr == mEventMap.end()) {
 			eventItr = mEventMap.emplace(id, std::vector<EventSubscriber>()).first;
@@ -42,10 +49,10 @@ public:
 		eventItr->second.emplace_back(std::move(sub));
 	}
 
-	virtual void unsubscribe(EventId id, std::shared_ptr<IPtrHolderBase> holder) override {
+	virtual void unsubscribe(EventId id, std::shared_ptr<PointerHolderBaseT> holder) override {
 		auto it = mEventMap.find(id);
 		if (it != mEventMap.end()) {
-			IPtrHolderBase* ptr = holder.get();
+			PointerHolderBaseT* ptr = holder.get();
 			auto& eventCallbacks = it->second;
 
 			for (auto callbackItr = eventCallbacks.begin(); callbackItr != eventCallbacks.end();) {
@@ -61,9 +68,9 @@ public:
 
 private:
 	struct EventSubscriber {
-		IPtrHolderBase* comparisonPtr;
-		std::weak_ptr<IPtrHolderBase> holder;
-		std::shared_ptr<ISubscriberCallerBase> caller;
+		PointerHolderBaseT* comparisonPtr;
+		std::weak_ptr<PointerHolderBaseT> holder;
+		std::shared_ptr<SubscriberCallerT> caller;
 	};
 
 	std::unordered_map<EventId, std::vector<EventSubscriber>> mEventMap;
