@@ -3,58 +3,79 @@
 
 #include "IEventBus.h"
 #include "MinecraftEventing.h"
-#include "Publisher.h"
 
 MinecraftEventing Eventing;
 
 struct EventA : public IMinecraftEvent {
-	EventA(int i) : foo(i) {}
-	int foo = 0;
+	EventA(std::string msg) : message(msg) {}
+	std::string message;
 };
 
 struct EventB : public IMinecraftEvent {
-	EventB(float i) : bar(i) {}
-	float bar = 0;
+	EventB(float i) : value(i) {}
+	float value = 0;
 };
 
-class ExampleFoo {
+class ExampleListener {
 public:
-	ExampleFoo(const std::string& listenerName)
+	ExampleListener(const std::string& name)
 		: mSubscription(Eventing.make_subscription(this))
-		, mListenerName(listenerName)
+		, mName(name)
 	{
 
 		mSubscription
 			.subscribe<EventA>()
-			.subscribe<EventB, &ExampleFoo::handle_different>();
+			.subscribe<EventB, &ExampleListener::handle_different>();
 	}
 
 	void handle(const EventA& event) {
-		std::cout << mListenerName << " - A - " << event.foo << std::endl;
+		std::cout << mName << " received event A with a value of " << event.message << "'" << std::endl;
 	}
 
 	void handle_different(const EventB& event) {
-		std::cout << mListenerName << " - B - " << event.bar << std::endl;
+		std::cout << mName << " received event B with a value of '" << event.value << "'" << std::endl;
 	}
 
 private:
-	const std::string mListenerName;
-	MinecraftEventSubscription<ExampleFoo> mSubscription;
+	const std::string mName;
+	MinecraftEventSubscription<ExampleListener> mSubscription;
+};
+
+class ExampleBroadcaster {
+public:
+	ExampleBroadcaster(const std::string& name)
+		: mPublisher(Eventing.make_publisher<EventA, EventB>())
+		, mName(name) {
+
+	}
+
+	void sendMessage(std::string msg) {
+		EventA event(std::move(msg));
+		mPublisher.publish(event);
+	}
+
+	void sendFloat(float f) {
+		EventB event(f);
+		mPublisher.publish(event);
+	}
+
+private:
+	const std::string mName;
+	MinecraftEventPublisher<EventA, EventB> mPublisher;
 };
 
 int main() {
-	auto publisher = Eventing.make_publisher<EventA, EventB>();
+	ExampleBroadcaster broadcaster("broadcaster1");
 
 	{
-		std::cout << "Testing 1" << std::endl;
-		ExampleFoo listener1("Listener 1");
-		publisher.publish(EventA(3));
-		publisher.publish(EventB(3.f));
+		ExampleListener listener1("Listener 1");
+
+		broadcaster.sendMessage("test message 1");
+		broadcaster.sendFloat(3.f);
 	}
+	
+	ExampleListener listener2("Listener 2");
 
-	std::cout << "Testing 2" << std::endl;
-	ExampleFoo listener2("Listener 2");
-
-	publisher.publish(EventA(3));
-	publisher.publish(EventB(3.f));
+	broadcaster.sendMessage("test message 2");
+	broadcaster.sendFloat(7.f);
 }
